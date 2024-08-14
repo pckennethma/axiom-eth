@@ -161,7 +161,7 @@ where
                 capacity
             );
         }
-        input.resize(capacity, input.get(0).unwrap().clone());
+        input.resize(capacity, input.first().unwrap().clone());
         self.input = Some(input);
         Ok(())
     }
