@@ -3,6 +3,7 @@ use std::iter::zip;
 use anyhow::bail;
 use axiom_codec::{
     constants::{MAX_SUBQUERY_OUTPUTS, USER_RESULT_FIELD_ELEMENTS, USER_RESULT_LEN_BYTES},
+    encoder::field_elements::DEFAULT_V2_ENABLED_TYPES,
     types::field_elements::SUBQUERY_RESULT_LEN,
     HiLo,
 };
@@ -312,6 +313,8 @@ impl CoreBuilder<F> for CoreBuilderVerifyCompute {
             0,
         );
 
+        let enabled_types = self.params.enabled_types().unwrap_or(DEFAULT_V2_ENABLED_TYPES);
+
         // not optimal: recomputing spec even though PromiseLoader also uses hasher
         let mut poseidon = create_hasher();
         poseidon.initialize_consts(ctx, range.gate());
@@ -325,6 +328,7 @@ impl CoreBuilder<F> for CoreBuilderVerifyCompute {
                 &table.rows,
                 num_subqueries,
                 &subquery_mask,
+                &enabled_types,
             )
         };
         let promise_subquery_hashes = {

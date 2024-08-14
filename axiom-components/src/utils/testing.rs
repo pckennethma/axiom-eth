@@ -72,7 +72,7 @@ pub fn basic_component_outputs_test<I: BasicComponentScaffold<Fr> + 'static>(
     expected_output: Vec<<BasicComponentScaffoldImpl<Fr, I> as ComponentType<Fr>>::OutputValue>,
     component_params: I::Params,
 ) where
-    I::Input<Fr>: LogicalInputValue<Fr> + DummyFrom<I::Params>,
+    I::Input<Fr>: LogicalInputValue<Fr>,
     Vec<I::Input<Fr>>: DummyFrom<I::Params>,
 {
     let rlc_circuit_params = RlcCircuitParams {
@@ -106,7 +106,7 @@ pub fn basic_component_test_prove<I: BasicComponentScaffold<Fr> + 'static>(
     component_params: <I as BasicComponentScaffold<Fr>>::Params,
 ) -> anyhow::Result<()>
 where
-    I::Input<Fr>: LogicalInputValue<Fr> + DummyFrom<I::Params>,
+    I::Input<Fr>: LogicalInputValue<Fr>,
     Vec<I::Input<Fr>>: DummyFrom<I::Params>,
 {
     let rlc_circuit_params = RlcCircuitParams {

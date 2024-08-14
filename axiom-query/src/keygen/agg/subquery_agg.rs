@@ -53,6 +53,7 @@ pub enum SubqueryAggInputSnark {
     Receipt,
     SolidityMapping,
     ECDSA,
+    Groth16,
     ResultsRoot,
 }
 
@@ -121,6 +122,7 @@ impl KeygenAggregationCircuitIntent for SubqueryAggIntent {
         let snark_receipt = remove_and_wrap(&SubqueryAggInputSnark::Receipt);
         let snark_solidity_mapping = remove_and_wrap(&SubqueryAggInputSnark::SolidityMapping);
         let snark_ecdsa = remove_and_wrap(&SubqueryAggInputSnark::ECDSA);
+        let snark_groth16 = remove_and_wrap(&SubqueryAggInputSnark::Groth16);
         let promise_commit_keccak = Fr::zero(); // just a dummy
 
         let input = InputSubqueryAggregation {
@@ -131,6 +133,7 @@ impl KeygenAggregationCircuitIntent for SubqueryAggIntent {
             snark_tx,
             snark_receipt,
             snark_ecdsa,
+            snark_groth16,
             promise_commit_keccak,
             snark_results_root: snark_results_root.unwrap(),
         };
@@ -169,6 +172,7 @@ fn get_key(supported: &SupportedIntentTreeSingleType) -> SubqueryAggInputSnark {
         S::SolidityMapping(_) => I::SolidityMapping,
         S::ResultsRoot(_) => I::ResultsRoot,
         S::ECDSA(_) => I::ECDSA,
+        S::Groth16(_) => I::Groth16,
     }
 }
 

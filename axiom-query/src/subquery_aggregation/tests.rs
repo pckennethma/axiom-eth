@@ -201,6 +201,7 @@ fn get_test_input(params: &ParamsKZG<Bn256>) -> anyhow::Result<InputSubqueryAggr
         snark_tx: None,
         snark_receipt: None,
         snark_ecdsa: None,
+        snark_groth16: None,
         promise_commit_keccak: keccak_commit,
     })
 }
@@ -317,6 +318,7 @@ fn test_prover_subquery_agg() -> anyhow::Result<()> {
             snark_tx: None,
             snark_receipt: None,
             snark_ecdsa: None,
+            snark_groth16: None,
             promise_commit_keccak: Default::default(),
         };
         let mut circuit =

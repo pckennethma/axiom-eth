@@ -1,6 +1,6 @@
 use std::{fmt::Debug, ops::Deref};
 
-use axiom_components::ecdsa::ECDSAComponentInput;
+use axiom_components::{ecdsa::ECDSAComponentInput, groth16::types::Groth16VerifierComponentInput};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -173,3 +173,4 @@ pub type FieldReceiptSubqueryResult<T> = AnySubqueryResult<FieldReceiptSubquery<
 pub type FieldSolidityNestedMappingSubqueryResult<T> =
     AnySubqueryResult<FieldSolidityNestedMappingSubquery<T>, HiLo<T>>;
 pub type FieldECDSASubqueryResult<T> = AnySubqueryResult<ECDSAComponentInput<T>, T>;
+pub type FieldGroth16SubqueryResult<T> = AnySubqueryResult<Groth16VerifierComponentInput<T>, T>;

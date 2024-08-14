@@ -1,9 +1,13 @@
 use std::io::{self, Read, Result};
 
-use axiom_components::ecdsa::ECDSAComponentNativeInput;
-use axiom_eth::halo2curves::bn256::G1Affine;
+use axiom_components::{
+    ecdsa::ECDSAComponentNativeInput,
+    groth16::types::{Groth16NativeInput, Groth16VerifierComponentInput},
+    utils::flatten::InputFlatten,
+};
+use axiom_eth::halo2curves::bn256::{Fr, G1Affine};
 use byteorder::{BigEndian, ReadBytesExt};
-use ethers_core::types::Bytes;
+use ethers_core::types::{Bytes, H256};
 
 use crate::{
     constants::MAX_SOLIDITY_MAPPING_KEYS,
@@ -31,6 +35,7 @@ impl TryFrom<Subquery> for AnySubquery {
                 decode_solidity_nested_mapping_subquery(&mut reader)?,
             ),
             SubqueryType::ECDSA => AnySubquery::ECDSA(decode_ecdsa_subquery(&mut reader)?),
+            SubqueryType::Groth16 => AnySubquery::Groth16(decode_groth16_subquery(&mut reader)?),
         })
     }
 }
@@ -47,6 +52,7 @@ impl TryFrom<u16> for SubqueryType {
             5 => Ok(Self::Receipt),
             6 => Ok(Self::SolidityNestedMapping),
             7 => Ok(Self::ECDSA),
+            8 => Ok(Self::Groth16),
             // 7 => Ok(Self::BeaconValidator),
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid SubqueryType")),
         }
@@ -161,4 +167,13 @@ pub fn decode_ecdsa_subquery(mut reader: impl Read) -> Result<ECDSAComponentNati
     let msg_hash = read_h256(&mut reader)?;
     let out = ECDSAComponentNativeInput { pubkey: (pubkey_x, pubkey_y), r, s, msg_hash };
     Ok(out)
+}
+
+pub fn decode_groth16_subquery(mut reader: impl Read) -> Result<Groth16NativeInput> {
+    let mut bytes: Vec<H256> = vec![];
+    for _ in 0..Groth16VerifierComponentInput::<Fr>::NUM_FE {
+        let fe = read_h256(&mut reader)?;
+        bytes.push(fe);
+    }
+    Ok(Groth16NativeInput { bytes })
 }

@@ -33,6 +33,8 @@ pub struct InputSubqueryAggregation {
     pub snark_receipt: Option<EnhancedSnark>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snark_ecdsa: Option<EnhancedSnark>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snark_groth16: Option<EnhancedSnark>,
 
     /// The keccak commit is provided as a public input.
     /// The SubqueryAggregation circuit will check that all subquery component circuits use the same promise commit for keccak.

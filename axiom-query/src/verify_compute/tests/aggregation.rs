@@ -131,6 +131,7 @@ fn get_test_input(
         agg_params.get_g()[0],
         client_metadata,
         agg_compute_snark.protocol.preprocessed.len(),
+        None,
     );
     println!("agg_compute_snark.protocol.preprocessed.len(): {}", core_params.preprocessed_len());
 

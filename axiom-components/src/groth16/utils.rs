@@ -5,17 +5,17 @@ use axiom_eth::{
     utils::hilo::HiLo,
     Field,
 };
-use groth_verifier::types::*;
 use halo2_ecc::{bn254::FpChip, ecc::EccChip, fields::vector::FieldVector};
 use num_bigint::BigUint;
 use num_traits::One;
 
+use super::verifier::types::{G1AffineAssigned, G2AffineAssigned};
 use crate::ecdsa::utils::load_fp_from_hilo;
 
 // HiLoPoint<T> represents a point on the G1 curve
-// and HiLoPair<T> represents a point on the G2 curve 
+// and HiLoPair<T> represents a point on the G2 curve
 pub type HiLoPoint<T> = (HiLo<T>, HiLo<T>);
-pub type HiLoPair<T> = (HiLoPoint<T>, HiLoPoint<T>); 
+pub type HiLoPair<T> = (HiLoPoint<T>, HiLoPoint<T>);
 
 pub fn hilo_point_to_affine<F: Field>(
     ctx: &mut Context<F>,
@@ -33,7 +33,7 @@ pub fn hilo_pair_to_affine<F: Field>(
     ctx: &mut Context<F>,
     range: &RangeChip<F>,
     g1_chip: &EccChip<F, FpChip<F>>,
-    pair: HiLoPair<AssignedValue<F>>
+    pair: HiLoPair<AssignedValue<F>>,
 ) -> G2AffineAssigned<F> {
     let fp_chip = g1_chip.field_chip();
     let bx0 = load_fp_from_hilo(ctx, range, fp_chip, pair.0 .0);
@@ -54,8 +54,8 @@ pub fn biguint_to_hilo<F: Field>(x: BigUint) -> HiLo<F> {
 
 pub fn vec_to_hilo_point<F: Field>(arr: &[String]) -> HiLoPoint<F> {
     (
-        biguint_to_hilo(FromStr::from_str(&arr[0]).unwrap()), 
-        biguint_to_hilo(FromStr::from_str(&arr[1]).unwrap())
+        biguint_to_hilo(FromStr::from_str(&arr[0]).unwrap()),
+        biguint_to_hilo(FromStr::from_str(&arr[1]).unwrap()),
     )
 }
 

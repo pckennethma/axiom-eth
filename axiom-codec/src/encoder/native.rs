@@ -3,7 +3,7 @@ use std::{
     iter,
 };
 
-use axiom_components::ecdsa::ECDSAComponentNativeInput;
+use axiom_components::{ecdsa::ECDSAComponentNativeInput, groth16::types::Groth16NativeInput};
 use byteorder::{BigEndian, WriteBytesExt};
 use ethers_core::{types::H256, utils::keccak256};
 
@@ -219,6 +219,16 @@ pub fn encode_ecdsa_component_native_input(
     Ok(())
 }
 
+pub fn encode_groth16_native_input(
+    writer: &mut impl Write,
+    input: Groth16NativeInput,
+) -> Result<()> {
+    for fe in input.bytes {
+        writer.write_all(&fe[..])?;
+    }
+    Ok(())
+}
+
 impl From<HeaderSubquery> for Subquery {
     fn from(value: HeaderSubquery) -> Self {
         let mut bytes = vec![];
@@ -278,6 +288,14 @@ impl From<ECDSAComponentNativeInput> for Subquery {
     }
 }
 
+impl From<Groth16NativeInput> for Subquery {
+    fn from(value: Groth16NativeInput) -> Self {
+        let mut bytes = vec![];
+        encode_groth16_native_input(&mut bytes, value).unwrap();
+        Self { subquery_type: SubqueryType::Groth16, encoded_subquery_data: bytes.into() }
+    }
+}
+
 impl From<AnySubquery> for Subquery {
     fn from(value: AnySubquery) -> Self {
         match value {
@@ -291,6 +309,7 @@ impl From<AnySubquery> for Subquery {
             AnySubquery::Receipt(subquery) => subquery.into(),
             AnySubquery::SolidityNestedMapping(subquery) => subquery.into(),
             AnySubquery::ECDSA(subquery) => subquery.into(),
+            AnySubquery::Groth16(subquery) => subquery.into(),
         }
     }
 }
@@ -329,5 +348,11 @@ impl From<SolidityNestedMappingSubquery> for AnySubquery {
 impl From<ECDSAComponentNativeInput> for AnySubquery {
     fn from(value: ECDSAComponentNativeInput) -> Self {
         AnySubquery::ECDSA(value)
+    }
+}
+
+impl From<Groth16NativeInput> for AnySubquery {
+    fn from(value: Groth16NativeInput) -> Self {
+        AnySubquery::Groth16(value)
     }
 }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Result};
-use axiom_components::ecdsa::ComponentTypeECDSA;
+use axiom_components::{ecdsa::ComponentTypeECDSA, groth16::ComponentTypeGroth16Verifier};
 use axiom_eth::{
     halo2_base::gates::{circuit::CircuitBuilderStage, GateChip},
     halo2_proofs::poly::kzg::commitment::ParamsKZG,
@@ -52,7 +52,7 @@ impl InputSubqueryAggregation {
         if self.snark_solidity_mapping.is_some() && self.snark_storage.is_none() {
             bail!("SolidityMapping snark requires Storage snark");
         }
-        const NUM_SNARKS: usize = 8;
+        const NUM_SNARKS: usize = 9;
         let snarks = vec![
             Some(self.snark_header),
             self.snark_account,
@@ -61,6 +61,7 @@ impl InputSubqueryAggregation {
             self.snark_receipt,
             self.snark_solidity_mapping,
             self.snark_ecdsa,
+            self.snark_groth16,
             Some(self.snark_results_root),
         ];
         let snarks_enabled = snarks.iter().map(|s| s.is_some()).collect_vec();
@@ -72,6 +73,7 @@ impl InputSubqueryAggregation {
             ComponentTypeReceiptSubquery::<F>::get_type_id(),
             ComponentTypeSolidityNestedMappingSubquery::<F>::get_type_id(),
             <ComponentTypeECDSA<F> as axiom_components::framework::ComponentType<F>>::get_type_id(),
+            <ComponentTypeGroth16Verifier<F> as axiom_components::framework::ComponentType<F>>::get_type_id(),
         ];
         if snarks.iter().flatten().any(|s| s.agg_vk_hash_idx.is_some()) {
             bail!("[SubqueryAggregation] No snark should be universal.");

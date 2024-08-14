@@ -1,4 +1,5 @@
 use axiom_codec::{
+    constants::NUM_SUBQUERY_TYPES,
     encoder::field_elements::{
         FIELD_ENCODED_SOLIDITY_NESTED_MAPPING_DEPTH_IDX, NUM_FE_ANY,
         NUM_FE_SOLIDITY_NESTED_MAPPING_WITHOUT_KEYS,
@@ -50,9 +51,12 @@ pub fn get_num_fe_from_subquery_key<F: ScalarField>(
     ctx: &mut Context<F>,
     gate: &impl GateInstructions<F>,
     key: &AssignedSubqueryKey<F>,
+    enabled_types: &[bool; NUM_SUBQUERY_TYPES],
 ) -> AssignedValue<F> {
     // num_fe_by_type will include 1 field element for the type itself, while NUM_FE_ANY does not
-    let num_fe_by_type: Vec<_> = NUM_FE_ANY
+    let last_enabled_type = enabled_types.iter().rposition(|&x| x).unwrap();
+    let enabled_num_fe_any = &NUM_FE_ANY[..=last_enabled_type];
+    let num_fe_by_type: Vec<_> = enabled_num_fe_any
         .iter()
         .enumerate()
         .map(|(subtype, &num_fe)| {

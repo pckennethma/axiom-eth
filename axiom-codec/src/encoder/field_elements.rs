@@ -1,6 +1,9 @@
 use std::io;
 
-use axiom_components::{ecdsa::ECDSAComponentInput, utils::flatten::InputFlatten};
+use axiom_components::{
+    ecdsa::ECDSAComponentInput, groth16::types::Groth16VerifierComponentInput,
+    utils::flatten::InputFlatten,
+};
 use axiom_eth::halo2curves::bn256::Fr;
 use ethers_core::types::{Bytes, H256};
 
@@ -30,7 +33,14 @@ pub const NUM_FE_ANY: [usize; NUM_SUBQUERY_TYPES] = [
     NUM_FE_RECEIPT,
     NUM_FE_SOLIDITY_NESTED_MAPPING,
     ECDSAComponentInput::<Fr>::NUM_FE,
+    Groth16VerifierComponentInput::<Fr>::NUM_FE,
 ];
+/// The enabled types affects the subquery hash calculation
+/// (the circuit iterates through the NUM_FE of each enabled type) and so to maintain
+/// backwards compatibility, the default is to enable the original V2 mainnet launch
+/// enabled types.
+pub const DEFAULT_V2_ENABLED_TYPES: [bool; NUM_SUBQUERY_TYPES] =
+    [true, true, true, true, true, true, true, false, false];
 
 /// The index of the mapping depth in [`FieldSolidityNestedMappingSubquery`].
 pub const FIELD_SOLIDITY_NESTED_MAPPING_DEPTH_IDX: usize = 4;
@@ -57,6 +67,8 @@ pub const BITS_PER_FE_SOLIDITY_NESTED_MAPPING: [usize; NUM_FE_SOLIDITY_NESTED_MA
     bits_per_fe_solidity_nested_mapping();
 pub const BYTES_PER_FE_ECDSA: [usize; ECDSAComponentInput::<Fr>::NUM_FE] =
     [16; ECDSAComponentInput::<Fr>::NUM_FE];
+pub const BYTES_PER_FE_GROTH16: [usize; Groth16VerifierComponentInput::<Fr>::NUM_FE] =
+    [32; Groth16VerifierComponentInput::<Fr>::NUM_FE];
 pub const BYTES_PER_FE_ANY: [&[usize]; NUM_SUBQUERY_TYPES] = [
     &[],
     &BYTES_PER_FE_HEADER,
@@ -66,6 +78,7 @@ pub const BYTES_PER_FE_ANY: [&[usize]; NUM_SUBQUERY_TYPES] = [
     &BYTES_PER_FE_RECEIPT,
     &BYTES_PER_FE_SOLIDITY_NESTED_MAPPING,
     &BYTES_PER_FE_ECDSA,
+    &BYTES_PER_FE_GROTH16,
 ];
 pub const BYTES_PER_FE_SUBQUERY_OUTPUT: usize = 16;
 
@@ -160,6 +173,7 @@ impl<F: Field> From<AnySubquery> for FieldSubquery<F> {
                 FieldSolidityNestedMappingSubquery::from(subquery).into()
             }
             AnySubquery::ECDSA(subquery) => ECDSAComponentInput::from(subquery).into(),
+            AnySubquery::Groth16(subquery) => Groth16VerifierComponentInput::from(subquery).into(),
         }
     }
 }
@@ -343,5 +357,14 @@ impl<F: Field> From<ECDSAComponentInput<F>> for FieldSubquery<F> {
         let mut encoded_subquery_data = [F::ZERO; MAX_SUBQUERY_INPUTS];
         encoded_subquery_data[..ECDSAComponentInput::<F>::NUM_FE].copy_from_slice(&value.flatten());
         Self { subquery_type: SubqueryType::ECDSA, encoded_subquery_data }
+    }
+}
+
+impl<F: Field> From<Groth16VerifierComponentInput<F>> for FieldSubquery<F> {
+    fn from(value: Groth16VerifierComponentInput<F>) -> Self {
+        let mut encoded_subquery_data = [F::ZERO; MAX_SUBQUERY_INPUTS];
+        encoded_subquery_data[..Groth16VerifierComponentInput::<F>::NUM_FE]
+            .copy_from_slice(&value.flatten());
+        Self { subquery_type: SubqueryType::Groth16, encoded_subquery_data }
     }
 }

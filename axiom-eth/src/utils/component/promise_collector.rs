@@ -121,21 +121,19 @@ impl<F: Field> PromiseCollector<F> {
         self.witness_grouped_calls
             .iter()
             .map(|(type_id, calls)| {
-                (
-                    type_id.clone(),
-                    calls
-                        .iter()
-                        .flat_map(|(_, calls_per_context)| {
-                            calls_per_context.iter().map(|(p, _)| TypelessPromiseCall {
-                                capacity: p.get_capacity(),
-                                logical_input: p.to_typeless_logical_input(),
-                            })
-                        })
-                        .sorted() // sorting to ensure the order is deterministic.
-                        // Note: likely not enough promise calls to be worth using par_sort
-                        .dedup()
-                        .collect_vec(),
-                )
+                let calls = calls.iter().flat_map(|(_, calls_per_context)| {
+                    calls_per_context.iter().map(|(p, _)| TypelessPromiseCall {
+                        capacity: p.get_capacity(),
+                        logical_input: p.to_typeless_logical_input(),
+                    })
+                });
+                dbg!(type_id.as_str());
+                let calls = if type_id.as_str() != "axiom-query:VirtualComponentTypeResultsRoot" {
+                    calls.sorted().dedup().collect_vec()
+                } else {
+                    calls.dedup().collect_vec()
+                };
+                (type_id.clone(), calls)
             })
             .collect()
     }

@@ -20,6 +20,7 @@ use axiom_eth::{
 use getset::{CopyGetters, Getters};
 use serde::{Deserialize, Serialize};
 
+use crate::axiom_codec::constants::NUM_SUBQUERY_TYPES;
 use crate::{
     components::results::{table::SubqueryResultsTable, types::CircuitOutputResultsRoot},
     utils::client_circuit::{metadata::AxiomV2CircuitMetadata, vkey::OnchainVerifyingKey},
@@ -48,6 +49,10 @@ pub struct CoreParamsVerifyCompute {
     /// Length of `preprocessed` in `PlonkProtocol`
     #[getset(get_copy = "pub")]
     preprocessed_len: usize,
+    /// - `enabled_types[subquery_type as u16]` is true if the subquery type is enabled.
+    /// - `enabled_types[0]` corresponds to the Null type. It doesn't matter whether it's enabled or disabled; behavior remains the same.
+    #[getset(get_copy = "pub")]
+    enabled_types: Option<[bool; NUM_SUBQUERY_TYPES]>,
 }
 
 impl CoreParamsVerifyCompute {
@@ -56,8 +61,9 @@ impl CoreParamsVerifyCompute {
         svk: G1Affine,
         client_metadata: AxiomV2CircuitMetadata,
         preprocessed_len: usize,
+        enabled_types: Option<[bool; NUM_SUBQUERY_TYPES]>,
     ) -> Self {
-        Self { subquery_results_capacity, svk, client_metadata, preprocessed_len }
+        Self { subquery_results_capacity, svk, client_metadata, preprocessed_len, enabled_types }
     }
 }
 impl CoreBuilderParams for CoreParamsVerifyCompute {

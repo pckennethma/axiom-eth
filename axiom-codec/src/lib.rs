@@ -1,5 +1,4 @@
 #![feature(trait_alias)]
-#![feature(io_error_other)]
 
 pub use axiom_eth::utils::hilo::HiLo;
 pub use axiom_eth::Field;

@@ -2,7 +2,7 @@ use std::{any::TypeId, path::Path};
 
 use axiom_components::{
     ecdsa::ECDSAComponent, framework::promise_loader::empty::EmptyPromiseLoader,
-    scaffold::BasicComponentScaffoldImpl,
+    groth16::Groth16VerifierComponent, scaffold::BasicComponentScaffoldImpl,
 };
 use axiom_eth::{
     halo2_base::{
@@ -100,6 +100,10 @@ pub type ShardIntentECDSA = ComponentShardCircuitIntent<
     BasicComponentScaffoldImpl<Fr, ECDSAComponent<Fr>>,
     EmptyPromiseLoader<Fr>,
 >;
+pub type ShardIntentGroth16 = ComponentShardCircuitIntent<
+    BasicComponentScaffoldImpl<Fr, Groth16VerifierComponent<Fr>>,
+    EmptyPromiseLoader<Fr>,
+>;
 pub type ShardIntentResultsRoot =
     ComponentShardCircuitIntent<CoreBuilderResultsRoot<Fr>, PromiseLoaderResultsRoot<Fr>>;
 // You should never shard verify compute, but the struct is the same.
@@ -109,6 +113,11 @@ pub type CircuitIntentVerifyCompute =
 pub type ECDSAComponentImpl = ComponentCircuitImpl<
     Fr,
     BasicComponentScaffoldImpl<Fr, ECDSAComponent<Fr>>,
+    EmptyPromiseLoader<Fr>,
+>;
+pub type Groth16ComponentImpl = ComponentCircuitImpl<
+    Fr,
+    BasicComponentScaffoldImpl<Fr, Groth16VerifierComponent<Fr>>,
     EmptyPromiseLoader<Fr>,
 >;
 
@@ -122,6 +131,7 @@ pub enum SupportedShardPinning {
     ShardReceipt(ComponentShardPinning<ComponentCircuitReceiptSubquery<Fr>>),
     ShardSolidityMapping(ComponentShardPinning<ComponentCircuitSolidityNestedMappingSubquery<Fr>>),
     ShardECDSA(ComponentShardPinning<ECDSAComponentImpl>),
+    ShardGroth16(ComponentShardPinning<Groth16ComponentImpl>),
     ShardResultsRoot(ComponentShardPinning<ComponentCircuitResultsRoot<Fr>>),
     ShardKeccak(ComponentShardPinning<KeccakComponentShardCircuit<Fr>>),
     ShardVerifyCompute(ComponentShardPinning<ComponentCircuitVerifyCompute>),

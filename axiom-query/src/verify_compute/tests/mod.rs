@@ -182,7 +182,7 @@ fn test_verify_no_compute_mock() {
     let circuit_k = 19u32;
 
     let (core_params, input) =
-        CircuitInputVerifyCompute::reconstruct(logic_input.clone(), &gen_srs(DUMMY_USER_K))
+        CircuitInputVerifyCompute::reconstruct(logic_input.clone(), &gen_srs(DUMMY_USER_K), None)
             .unwrap();
     let circuit = prepare_mock_circuit(core_params, circuit_k as usize, 200, input);
     let instances = circuit.get_public_instances();
@@ -231,7 +231,7 @@ fn test_verify_compute_mock() -> anyhow::Result<()> {
     let circuit_k = 19u32;
 
     let (core_params, input) =
-        CircuitInputVerifyCompute::reconstruct(logic_input.clone(), &app_params)?;
+        CircuitInputVerifyCompute::reconstruct(logic_input.clone(), &app_params, None)?;
     let circuit = prepare_mock_circuit(core_params, circuit_k as usize, 200, input);
     let instances = circuit.get_public_instances();
 
@@ -299,6 +299,7 @@ fn test_verify_compute_prover_full() -> anyhow::Result<()> {
             "verify_compute",
             None,
             200,
+            None,
         )
         .unwrap()
     });
@@ -337,7 +338,7 @@ fn test_verify_compute_prepare_for_agg() -> anyhow::Result<()> {
 
     let circuit_k = 19u32;
     let (core_params, input) =
-        CircuitInputVerifyCompute::reconstruct(logic_input.clone(), &app_params)?;
+        CircuitInputVerifyCompute::reconstruct(logic_input.clone(), &app_params, None)?;
     let keccak_cap = 200;
     let circuit = prepare_mock_circuit(core_params, circuit_k as usize, keccak_cap, input);
     let keccak_shard = generate_keccak_shards_from_calls(&circuit, keccak_cap)?;
@@ -400,6 +401,7 @@ fn test_verify_compute_prover_for_agg() -> anyhow::Result<()> {
         "verify_compute_for_agg",
         Some(promise_keccak),
         keccak_cap,
+        None,
     )?;
     Ok(())
 }
@@ -419,6 +421,7 @@ impl CircuitInputVerifyCompute {
     pub fn reconstruct(
         input: InputVerifyCompute,
         params_for_dummy: &ParamsKZG<Bn256>,
+        enabled_types: Option<[bool; NUM_SUBQUERY_TYPES]>,
     ) -> anyhow::Result<(CoreParamsVerifyCompute, Self)> {
         let InputVerifyCompute { source_chain_id, subquery_results, compute_query } = input;
 
@@ -435,6 +438,7 @@ impl CircuitInputVerifyCompute {
             params_for_dummy.get_g()[0],
             client_metadata,
             compute_snark.protocol.preprocessed.len(),
+            enabled_types,
         );
         println!(
             "compute_snark.protocol.preprocessed.len(): {}",

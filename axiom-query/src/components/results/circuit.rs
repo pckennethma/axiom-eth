@@ -1,5 +1,5 @@
 use axiom_codec::constants::{MAX_SUBQUERY_OUTPUTS, NUM_SUBQUERY_TYPES};
-use axiom_components::ecdsa::ComponentTypeECDSA;
+use axiom_components::{ecdsa::ComponentTypeECDSA, groth16::ComponentTypeGroth16Verifier};
 use axiom_eth::{
     component_type_list,
     halo2_base::{
@@ -56,7 +56,7 @@ pub struct CoreBuilderResultsRoot<F: Field> {
 }
 
 /// Specify the output format of ResultRoot component.
-#[derive(Clone, Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct CoreParamsResultRoot {
     /// - `enabled_types[subquery_type as u16]` is true if the subquery type is enabled.
     /// - `enabled_types[0]` corresponds to the Null type. It doesn't matter whether it's enabled or disabled; behavior remains the same.
@@ -64,6 +64,31 @@ pub struct CoreParamsResultRoot {
     /// Maximum total number of subquery results supported
     pub capacity: usize,
 }
+
+impl<'de> Deserialize<'de> for CoreParamsResultRoot {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct TempCoreParamsResultRoot {
+            enabled_types: Vec<bool>,
+            capacity: usize,
+        }
+
+        let temp = TempCoreParamsResultRoot::deserialize(deserializer)?;
+        if temp.enabled_types.len() > NUM_SUBQUERY_TYPES {
+            panic!("enabled_types length exceeds NUM_SUBQUERY_TYPES");
+        }
+        let mut enabled_types = [false; NUM_SUBQUERY_TYPES];
+        for (i, &value) in temp.enabled_types.iter().enumerate() {
+            enabled_types[i] = value;
+        }
+
+        Ok(CoreParamsResultRoot { enabled_types, capacity: temp.capacity })
+    }
+}
+
 impl CoreBuilderParams for CoreParamsResultRoot {
     fn get_output_params(&self) -> CoreBuilderOutputParams {
         CoreBuilderOutputParams::new(vec![])
@@ -79,7 +104,8 @@ pub type SubqueryDependencies<F> = component_type_list!(
     ComponentTypeTxSubquery<F>,
     ComponentTypeReceiptSubquery<F>,
     ComponentTypeSolidityNestedMappingSubquery<F>,
-    ComponentTypeECDSA<F>
+    ComponentTypeECDSA<F>,
+    ComponentTypeGroth16Verifier<F>
 );
 
 pub type PromiseLoaderResultsRoot<F> = PromiseBuilderCombo<
@@ -176,8 +202,14 @@ impl<F: Field> CoreBuilder<F> for CoreBuilderResultsRoot<F> {
         let mut poseidon = create_hasher();
         poseidon.initialize_consts(ctx, gate);
         // compute resultsRootPoseidon
-        let results_root_poseidon =
-            get_results_root(ctx, range, &poseidon, &subqueries, num_subqueries);
+        let results_root_poseidon = get_results_root(
+            ctx,
+            range,
+            &poseidon,
+            &subqueries,
+            num_subqueries,
+            &self.params.enabled_types,
+        );
 
         let commit_subquery_hashes = {
             // take variable length list of `num_subqueries` subquery hashes and flat hash them all together

@@ -89,7 +89,7 @@ pub trait BasicComponentScaffold<F: Field>: BasicComponentScaffoldIOTypes<F> {
 impl<F: Field, I: BasicComponentScaffold<F> + 'static> ComponentType<F>
     for BasicComponentScaffoldImpl<F, I>
 where
-    I::Input<F>: LogicalInputValue<F> + DummyFrom<I::Params>,
+    I::Input<F>: LogicalInputValue<F>,
 {
     type InputValue = I::Input<F>;
     type InputWitness = I::Input<AssignedValue<F>>;
@@ -144,7 +144,7 @@ impl<F: Field, I: BasicComponentScaffold<F>> ComponentBuilder<F>
 impl<F: Field, I: BasicComponentScaffold<F> + 'static> CoreBuilder<F>
     for BasicComponentScaffoldImpl<F, I>
 where
-    I::Input<F>: LogicalInputValue<F> + DummyFrom<I::Params>,
+    I::Input<F>: LogicalInputValue<F>,
     Vec<I::Input<F>>: DummyFrom<I::Params>,
 {
     type CompType = Self;
@@ -161,7 +161,7 @@ where
                 capacity
             );
         }
-        input.resize(capacity, input.get(0).unwrap().clone());
+        input.resize(capacity, input.first().unwrap().clone());
         self.input = Some(input);
         Ok(())
     }

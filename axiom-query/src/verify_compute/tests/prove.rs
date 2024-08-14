@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-use axiom_codec::constants::USER_MAX_OUTPUTS;
+use axiom_codec::constants::{NUM_SUBQUERY_TYPES, USER_MAX_OUTPUTS};
 use axiom_eth::{
     halo2_base::utils::fs::gen_srs,
     keccak::{
@@ -34,6 +34,7 @@ pub fn verify_compute_prover(
     name: &str,
     promise_keccak: Option<OutputKeccakShard>,
     keccak_capacity: usize,
+    enabled_types: Option<[bool; NUM_SUBQUERY_TYPES]>,
 ) -> anyhow::Result<(Snark, RlcCircuitPinning, OutputKeccakShard)> {
     type I = CircuitInputVerifyCompute;
 
@@ -51,7 +52,7 @@ pub fn verify_compute_prover(
         0,
         0,
     )?;
-    let (core_params, input) = I::reconstruct(input, &default_params)?;
+    let (core_params, input) = I::reconstruct(input, &default_params, enabled_types)?;
 
     let circuit_k = 19u32;
 
@@ -90,7 +91,7 @@ pub fn verify_compute_prover(
     logic_input.subquery_results.results.resize(max_num_subqueries, first);
     let first = logic_input.subquery_results.subquery_hashes[0];
     logic_input.subquery_results.subquery_hashes.resize(max_num_subqueries, first);
-    let (core_params, input) = I::reconstruct(logic_input, &default_params)?;
+    let (core_params, input) = I::reconstruct(logic_input, &default_params, enabled_types)?;
     let circuit =
         ComponentCircuitVerifyCompute::prover(core_params, loader_params, pinning.clone());
     circuit.feed_input(Box::new(input)).unwrap();

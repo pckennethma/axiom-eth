@@ -17,8 +17,14 @@ use axiom_codec::{
     },
     utils::native::u256_to_h256,
 };
-use axiom_components::ecdsa::{
-    utils::testing::custom_parameters_ecdsa, ComponentTypeECDSA, ECDSAComponentNativeInput,
+use axiom_components::{
+    ecdsa::{
+        utils::testing::custom_parameters_ecdsa, ComponentTypeECDSA, ECDSAComponentNativeInput,
+    },
+    groth16::{
+        test::default_groth16_subquery_input, types::Groth16NativeInput,
+        ComponentTypeGroth16Verifier,
+    },
 };
 use axiom_eth::{
     block_header::{EXTRA_DATA_INDEX, RECEIPT_ROOT_INDEX, STATE_ROOT_INDEX, TX_ROOT_INDEX},
@@ -83,12 +89,13 @@ pub struct ComponentCapacities {
     pub receipt: usize,
     pub solidity_mapping: usize,
     pub ecdsa: usize,
+    pub groth16: usize,
     pub keccak: usize,
 }
 impl ComponentCapacities {
     pub fn to_str_short(&self) -> String {
         format!(
-            "{}_{}_{}_{}_{}_{}_{}_{}_{}",
+            "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}",
             self.total,
             self.header,
             self.account,
@@ -97,6 +104,7 @@ impl ComponentCapacities {
             self.receipt,
             self.solidity_mapping,
             self.ecdsa,
+            self.groth16,
             self.keccak
         )
     }
@@ -190,6 +198,16 @@ pub fn get_test_input<F: Field>(
     let mut ecdsa_subqueries: Vec<(ECDSAComponentNativeInput, H256)> =
         vec![(custom_parameters_ecdsa(3, 10898, 2).into(), u256_to_h256(&U256::from_str("1")?))];
 
+    fn get_h256(val: u64) -> H256 {
+        u256_to_h256(&U256::from_str(val.to_string().as_str()).unwrap())
+    }
+    let groth16_input = default_groth16_subquery_input(4);
+    let mut groth16_subqueries: Vec<(Groth16NativeInput, H256)> = vec![
+        (groth16_input[0].clone().into(), get_h256(2)),
+        (groth16_input[1].clone().into(), get_h256(2)),
+        (groth16_input[2].clone().into(), get_h256(1)),
+    ];
+
     header_subqueries.truncate(capacity.header);
     acct_subqueries.truncate(capacity.account);
     storage_subqueries.truncate(capacity.storage);
@@ -197,6 +215,7 @@ pub fn get_test_input<F: Field>(
     tx_subqueries.truncate(capacity.tx);
     receipt_subqueries.truncate(capacity.receipt);
     ecdsa_subqueries.truncate(capacity.ecdsa);
+    groth16_subqueries.truncate(capacity.groth16);
 
     fn append(
         results: &mut Vec<SubqueryResult>,
@@ -222,6 +241,7 @@ pub fn get_test_input<F: Field>(
     append(&mut results, &storage_subqueries);
     append(&mut results, &solidity_mapping_subqueries);
     append(&mut results, &ecdsa_subqueries);
+    append(&mut results, &groth16_subqueries);
     results.truncate(capacity.total);
     let num_subqueries = results.len();
     resize_with_first(&mut results, capacity.total);
@@ -240,6 +260,7 @@ pub fn get_test_input<F: Field>(
     resize_with_first(&mut receipt_subqueries, capacity.receipt);
     resize_with_first(&mut solidity_mapping_subqueries, capacity.solidity_mapping);
     resize_with_first(&mut ecdsa_subqueries, capacity.ecdsa);
+    resize_with_first(&mut groth16_subqueries, capacity.groth16);
 
     let promise_header = prepare(header_subqueries);
     let promise_account = prepare(acct_subqueries);
@@ -248,6 +269,7 @@ pub fn get_test_input<F: Field>(
     let promise_receipt = prepare(receipt_subqueries);
     let promise_solidity_mapping = prepare(solidity_mapping_subqueries);
     let promise_ecdsa = prepare(ecdsa_subqueries);
+    let promise_groth16 = prepare(groth16_subqueries);
 
     let mut promise_results = HashMap::new();
     for (type_id, pr) in SubqueryDependencies::<F>::get_component_type_ids().into_iter().zip_eq([
@@ -271,6 +293,9 @@ pub fn get_test_input<F: Field>(
         ),
         shard_into_component_promise_results::<F, ComponentTypeECDSA<F>>(
             promise_ecdsa.convert_into(),
+        ),
+        shard_into_component_promise_results::<F, ComponentTypeGroth16Verifier<F>>(
+            promise_groth16.convert_into(),
         ),
     ]) {
         // filter out empty shards with capacity = 0.
@@ -301,6 +326,7 @@ pub const fn test_capacity() -> ComponentCapacities {
         receipt: 8,
         solidity_mapping: 8,
         ecdsa: 8,
+        groth16: 3,
         keccak: 500,
     }
 }
@@ -421,6 +447,7 @@ fn test_mock_results_root_header_only_for_agg() -> anyhow::Result<()> {
         receipt: 0,
         solidity_mapping: 0,
         ecdsa: 0,
+        groth16: 0,
         keccak: 200,
     };
     let (input, output, mut promise_results) = get_test_input(capacity)?;

@@ -1,3 +1,4 @@
+use axiom_codec::constants::NUM_SUBQUERY_TYPES;
 use axiom_eth::{
     halo2_base::{
         gates::{GateInstructions, RangeChip, RangeInstructions},
@@ -39,11 +40,20 @@ pub fn get_results_root<F: Field, const T: usize, const RATE: usize>(
     poseidon: &PoseidonHasher<F, T, RATE>,
     results: &[AssignedSubqueryResult<F>],
     num_subqueries: AssignedValue<F>,
+    enabled_types: &[bool; NUM_SUBQUERY_TYPES],
 ) -> AssignedValue<F> {
     let gate = range.gate();
     let subquery_mask = unsafe_lt_mask(ctx, gate, num_subqueries, results.len());
 
-    get_results_root_poseidon(ctx, range, poseidon, results, num_subqueries, &subquery_mask)
+    get_results_root_poseidon(
+        ctx,
+        range,
+        poseidon,
+        results,
+        num_subqueries,
+        &subquery_mask,
+        enabled_types,
+    )
 }
 
 /// The subquery data and results vector `subquery_results` may be resized to some fixed length
@@ -77,6 +87,7 @@ pub fn get_results_root_poseidon<F: Field, const T: usize, const RATE: usize>(
     subquery_results: &[AssignedSubqueryResult<F>],
     num_subqueries: AssignedValue<F>,
     subquery_mask: &[SafeBool<F>],
+    enabled_types: &[bool; NUM_SUBQUERY_TYPES],
 ) -> AssignedValue<F> {
     let gate = range.gate();
 
@@ -90,7 +101,7 @@ pub fn get_results_root_poseidon<F: Field, const T: usize, const RATE: usize>(
     let mut leaves = Vec::with_capacity(1 << tree_depth);
     for (subquery_result, &mask) in subquery_results.iter().zip_eq(subquery_mask) {
         let key = &subquery_result.key;
-        let key_len = get_num_fe_from_subquery_key(ctx, gate, key);
+        let key_len = get_num_fe_from_subquery_key(ctx, gate, key, enabled_types);
         let subquery_hash = initialized_hasher.hash_var_len_array(ctx, range, &key.0, key_len);
         let concat = [&[subquery_hash], &subquery_result.value[..]].concat();
         let mut leaf = initialized_hasher.hash_fix_len_array(ctx, gate, &concat);

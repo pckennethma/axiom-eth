@@ -1,4 +1,4 @@
-use axiom_components::ecdsa::ECDSAComponentNativeInput;
+use axiom_components::{ecdsa::ECDSAComponentNativeInput, groth16::types::Groth16NativeInput};
 use axiom_eth::halo2curves::bn256::G1Affine;
 use ethers_core::types::{Address, Bytes, H256, U256};
 use serde::{Deserialize, Serialize};
@@ -78,6 +78,7 @@ pub enum SubqueryType {
     Receipt = 5,
     SolidityNestedMapping = 6,
     ECDSA = 7,
+    Groth16 = 8,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -90,6 +91,7 @@ pub enum AnySubquery {
     Receipt(ReceiptSubquery),
     SolidityNestedMapping(SolidityNestedMappingSubquery),
     ECDSA(ECDSAComponentNativeInput),
+    Groth16(Groth16NativeInput),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Hash, PartialEq, Eq, PartialOrd, Ord)]

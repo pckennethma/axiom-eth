@@ -20,7 +20,7 @@ use crate::keygen::{
         ShardIntentAccount, ShardIntentHeader, ShardIntentReceipt, ShardIntentResultsRoot,
         ShardIntentSolidityMapping, ShardIntentStorage, ShardIntentTx,
     },
-    ProvingKeySerializer, ShardIntentECDSA, SupportedPinning,
+    ProvingKeySerializer, ShardIntentECDSA, ShardIntentGroth16, SupportedPinning,
 };
 
 use super::{common::parse_agg_intent, SupportedAggPinning};
@@ -35,6 +35,7 @@ pub enum SupportedIntentTreeSingleType {
     Receipt(IntentTreeSingleType<ShardIntentReceipt>),
     SolidityMapping(IntentTreeSingleType<ShardIntentSolidityMapping>),
     ECDSA(IntentTreeSingleType<ShardIntentECDSA>),
+    Groth16(IntentTreeSingleType<ShardIntentGroth16>),
     ResultsRoot(IntentTreeSingleType<ShardIntentResultsRoot>),
 }
 
