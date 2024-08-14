@@ -1,4 +1,3 @@
-#![feature(io_error_other)]
 #![feature(associated_type_defaults)]
 
 pub use axiom_codec;
