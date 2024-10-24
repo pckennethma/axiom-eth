@@ -25,7 +25,7 @@ serde_with = { version = "2.2", optional = true }
 
 # halo2
 ff = "0.12"
-halo2-base = { git = "https://github.com/pckennethma/halo2-lib.git", branch = "svd", default-features = false }
+halo2-base = { git = "https://github.com/pckennethma/halo2-lib.git", branch = "svd", default-features = false, features = ["halo2-base"] }
 zkevm-keccak = { git = "https://github.com/pckennethma/halo2-lib.git", branch = "svd", default-features = false }
 # macro
 any_circuit_derive = { path = "../any_circuit_derive", optional = true }
