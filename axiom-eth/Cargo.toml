@@ -43,7 +43,7 @@ snark-verifier-sdk = { git = "https://github.com/pckennethma/snark-verifier.git"
 
 # generating circuit inputs from blockchain
 ethers-providers = { version = "=2.0.6", optional = true }
-tokio = { version = "=1.28", default-features = false, features = ["rt", "rt-multi-thread"], optional = true }
+tokio = { version = "^1.28", default-features = false, features = ["rt", "rt-multi-thread"], optional = true }
 futures = { version = "=0.3", optional = true }
 
 [dev-dependencies]
